@@ -15,6 +15,7 @@ Thus, the middleware must perform the workload balance on the heterogeneous comp
 
 <img src="https://s1.328888.xyz/2022/09/29/Mlalw.png" align="center" style="width: 50%" />
 
+
 Fig.1a gives an example of online algorithm selection and hardware scheduling in robots.
 The image sensor sends RGBD images at regular intervals, and the images are fed to Visual Odometer (VO) and Object Detection (OD) modules. 
 Each module has different implementations, with different resource consumption and calculation accuracy. 
@@ -29,3 +30,14 @@ Therefore, we propose a self-organizing computing scheduling framework based on 
 - We propose a method to label algorithms for the same functional module (each algorithm is a **node** in ROS2). The input data is sent to only one node for processing, reducing the communication traffic and computing requirements.
 - We propose a method to dynamically select each functional module's processing algorithm and hardware, increasing the processing speed by 19\%-55\%.
 - We integrate the methods into ROS2 middleware and open-source the integrated ROS2 at https://github.com/efc-robot/Select-ROS2. So that developers do not need to care about dynamic resource scheduling on heterogeneous platforms.
+
+## EXTENDED PROTOCOLS
+We extend the DDS protocols to label the subscribers which perform the same algorithm, and to provide more information for algorithm and hardware automatic selection.
+Mainly, there are three types of data in our extended protocols. 1) The subscriber label with hardware resources information. 2) The frequency and latency requirement of the published topic. 3) The run-time computation capability of each hardware.
+<img src="https://s1.328888.xyz/2022/09/29/MlZ2k.png" align="center" style="width: 50%" />
+
+## ALGORITHM & HARDWARE SELECTION
+The overall algorithm is shown in the figure below：
+<img src="https://s1.328888.xyz/2022/09/29/MmC4U.png" align="center" style="width: 50%" />
+<img src="https://s1.328888.xyz/2022/09/29/Mmwnd.png" align="center" style="width: 50%" />
+

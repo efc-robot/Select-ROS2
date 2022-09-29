@@ -7,3 +7,4 @@ Select-ROS2 allows different subscribers in ROS2 to perform the same function, a
 Furthermore, Select-ROS2 enables automatic runtime algorithm and hardware selection instead of handcraft offline selection, to perform the computing workload balance on the heterogeneous computing system.
 Select-ROS2 is open-sourced at https://github.com/efc-robot/Select-ROS2.
 
+<img src="https://s1.328888.xyz/2022/09/29/Mlalw.png" align="center" style="width: 100%" />

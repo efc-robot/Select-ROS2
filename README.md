@@ -34,11 +34,29 @@ Therefore, we propose a self-organizing computing scheduling framework based on 
 ## EXTENDED PROTOCOLS
 We extend the DDS protocols to label the subscribers which perform the same algorithm, and to provide more information for algorithm and hardware automatic selection.
 Mainly, there are three types of data in our extended protocols. 1) The subscriber label with hardware resources information. 2) The frequency and latency requirement of the published topic. 3) The run-time computation capability of each hardware.
+
 <img src="https://s1.328888.xyz/2022/09/29/MlZ2k.png" align="center" style="width: 50%" />
 
 ## ALGORITHM & HARDWARE SELECTION
 The overall algorithm is shown in the figure below：
+The publisher records the static subscriber information like computing resources cost and monitors the runtime computing capability as well as the computing requirement.
+
+In this section, we detail the algorithm and hardware selection method based on the above information.
+
+The algorithm and hardware selection method are processed at the publisher node.
+
+Algorithm 1 shows that we could choose the algorithm and hardware according to the computing requirement and computing capability .
 
 <img src="https://s1.328888.xyz/2022/09/29/MmC4U.png" align="center" style="width: 50%" />
+
+Algorithm 2 shows the code to create a subscriber with call back function in the original ROS2 middleware.
+
+At the creation stage, users need to assign the extended subscriber label (SubLabel) if they want the middleware automatically select the algorithms and computing hardware.
+
+Users can leave the SubLabel default, and our middleware will send the message to the subscriber in the original manner according to the topic name and QoS.
+
+After the call-back function is complete, the subscriber needs to inform the publisher that the algorithm is finished.
+
 <img src="https://s1.328888.xyz/2022/09/29/Mmwnd.png" align="center" style="width: 50%" />
 
+## Demo video

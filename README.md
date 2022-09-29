@@ -38,6 +38,7 @@ Mainly, there are three types of data in our extended protocols. 1) The subscrib
 
 ## ALGORITHM & HARDWARE SELECTION
 The overall algorithm is shown in the figure below：
+
 <img src="https://s1.328888.xyz/2022/09/29/MmC4U.png" align="center" style="width: 50%" />
 <img src="https://s1.328888.xyz/2022/09/29/Mmwnd.png" align="center" style="width: 50%" />
 

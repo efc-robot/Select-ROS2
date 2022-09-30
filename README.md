@@ -61,4 +61,5 @@ After the call-back function is complete, the subscriber needs to inform the pub
 
 ## Demo video
 The introduction video is available at the following website.
-[<iframe src="//player.bilibili.com/player.html?aid=96500031&bvid=BV1ve4y1r7fu&cid=165000000&page=1" scrolling="no"  frameborder="no" framespacing="0" allowfullscreen="true"> </iframe>](https://www.bilibili.com/video/BV1ve4y1r7fu/?spm_id_from=333.999.0.0&vd_source=dc57e91f2492075dae0cd13e82230dd9)
+
+https://www.bilibili.com/video/BV1ve4y1r7fu/?spm_id_from=333.999.0.0&vd_source=dc57e91f2492075dae0cd13e82230dd9

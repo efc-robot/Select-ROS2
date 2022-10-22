@@ -63,3 +63,63 @@ After the call-back function is complete, the subscriber needs to inform the pub
 The introduction video is available at the following website.
 
 https://www.bilibili.com/video/BV1ve4y1r7fu/?spm_id_from=333.999.0.0&vd_source=dc57e91f2492075dae0cd13e82230dd9
+
+## How to use
+
+### Install Select-ROS2
+There are two ways to use Select-ROS2, one is to install the Select-ROS2 from the source code, and the other is to use Select-ROS2 in the docker container we provided.
+
+We recommend using the docker container, because it is easy to use and does not affect the original ROS2 environment.
+#### Install from source code
+1. Download the source code from github
+```
+git clone https://github.com/efc-robot/Select-ROS2.git
+```
+2. Build ROS2-select from the source code
+```
+# Build as debug mode
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Debug
+# Build as release mode
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+```
+
+#### Install from docker container
+
+1. Download the docker image from the following link
+
+https://cloud.tsinghua.edu.cn/d/f55ca6d137674df5a1a6/
+
+2. Load the docker image
+```
+docker load -i select_ros2.tar
+```
+3. Run the docker container
+Create the network bridge for the docker container
+```
+docker network create --driver bridge --subnet 192.168.50.0/24 --gateway 192.168.50.1 mynet2
+```
+
+```
+sudo docker run -d -it  --network mynet2 --cpus=2 -v /home/nicsrobot/middleware_docker[The dataset's path in your computer]:/home/nics/testdocker 98beb2e45086[The ROS2-select image ID] /bin/bash
+```
+4. Enter the docker container
+```
+docker exec -it [container ID] /bin/bash
+```
+
+### Run the demo
+
+1. Run the publisher node
+```
+ros2 launch superpoint_vo  bringup_publisher.launch
+```
+
+2. Run the subscriber node
+```
+ros2 launch superpoint_vo bringup_subscriber.launch
+```
+
+3. Run the test demo
+
+We use the tools in https://github.com/efc-robot/DDS-benchmark to test the latency and throughput of Select-ROS2.

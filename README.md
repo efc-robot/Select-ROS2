@@ -88,7 +88,7 @@ colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 
 1. Download the docker image from the following link
 
-https://cloud.tsinghua.edu.cn/d/f55ca6d137674df5a1a6/
+https://cloud.tsinghua.edu.cn/d/519c3697f35848c0b8a9/
 
 2. Load the docker image
 ```

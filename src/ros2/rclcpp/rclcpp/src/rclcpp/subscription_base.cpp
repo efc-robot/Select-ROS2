@@ -83,7 +83,7 @@ SubscriptionBase::SubscriptionBase(
       new rcl_subscription_t, custom_deletor);
   *subscription_handle_.get() = rcl_get_zero_initialized_subscription();
   std::string data;
-  std::string txt_file = "/home/nicsrobot/ros2_foxy_debug/src/ros2/examples/rclcpp/topics/minimal_subscriber/";
+  std::string txt_file = "/home/nics/ros2_foxy_debug/src/ros2/examples/rclcpp/topics/minimal_subscriber/";
   std::string node_name = node_base_->get_name();
   txt_file += node_name;
   txt_file += topic_name;

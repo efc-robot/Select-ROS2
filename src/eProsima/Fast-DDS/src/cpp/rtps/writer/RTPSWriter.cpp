@@ -30,6 +30,87 @@
 #include <rtps/participant/RTPSParticipantImpl.h>
 #include <fstream>
 #include <mutex>
+#include <vector>
+#include <algorithm>
+#include <chrono>
+#include <ctime>
+#include <sys/time.h>
+
+struct machineID
+{
+    int ID1;
+    int ID2;
+    int ID3;
+    int ID4;
+};
+
+struct judge_table
+{
+    int ModuleID;
+    int PriorityID;
+    machineID MachineID;
+    double Latency;
+    double CPUCost;
+    double GPUCost;
+    bool Running = false;
+};
+
+struct source_table
+{
+    double CPUIdle;
+    double GPUIdle;
+};
+source_table read_source_from_txt(machineID mID)
+{
+    source_table table;
+    string txt_file;
+    txt_file = "/home/nics/my_hub/source/";
+    txt_file += to_string(mID.ID1);
+    txt_file += "-";
+    txt_file += to_string(mID.ID2);
+    txt_file += "-";
+    txt_file += to_string(mID.ID3);
+    txt_file += "-";
+    txt_file += to_string(mID.ID4);
+    txt_file += ".txt";
+    string str;
+    ifstream ifs;
+
+    ifs.open(txt_file, ios::in);
+    if (!ifs.is_open())
+    {
+        std::cout << "open file error" << endl;
+        return table;
+    }
+    // 一直读入
+    while (getline(ifs, str))
+    {
+        // 读取使用空格分割的字符串
+        int i = 0;
+        while (str[i] != ' ')
+        {
+            i++;
+        }
+        table.CPUIdle = std::stod(str.substr(0, i));
+        table.GPUIdle = std::stod(str.substr(i + 1, str.length() - i - 1));
+    }
+    ifs.close();
+
+    return table;
+}
+
+bool compare(judge_table a, judge_table b)
+{
+    return a.PriorityID < b.PriorityID;
+}
+
+void write_txt(std::string txt_file, std::string data)
+{
+    std::ofstream ofs;
+    ofs.open(txt_file, std::ios::out);
+    ofs << data << std::endl;
+    ofs.close();
+}
 
 std::string read_txt(std::string txt_file)
 {
@@ -51,12 +132,171 @@ std::string read_txt(std::string txt_file)
     return data;
 }
 
-void write_txt(std::string txt_file, std::string data)
+void init_source(machineID mID, double cpu, double gpu)
 {
-    std::ofstream ofs;
-    ofs.open(txt_file, std::ios::out);
-    ofs << data << std::endl;
-    ofs.close();
+    // get mID info
+    string txt_file = "/home/nics/my_hub/source/";
+    txt_file += std::to_string(mID.ID1);
+    txt_file += "-";
+    txt_file += std::to_string(mID.ID2);
+    txt_file += "-";
+    txt_file += std::to_string(mID.ID3);
+    txt_file += "-";
+    txt_file += std::to_string(mID.ID4);
+    txt_file += ".txt";
+    // init source info
+    // 获得两个0.5~0.9的随机数
+    source_table table = read_source_from_txt(mID);
+    table.CPUIdle += cpu;
+    table.GPUIdle += gpu;
+    string data = std::to_string(table.CPUIdle) + " " + std::to_string(table.GPUIdle);
+    write_txt(txt_file, data);
+}
+
+void modify_source(judge_table table1)
+{
+    // 修改已消耗的资源
+    string txt_file = "/home/nics/my_hub/source/";
+    txt_file += std::to_string(table1.MachineID.ID1);
+    txt_file += "-";
+    txt_file += std::to_string(table1.MachineID.ID2);
+    txt_file += "-";
+    txt_file += std::to_string(table1.MachineID.ID3);
+    txt_file += "-";
+    txt_file += std::to_string(table1.MachineID.ID4);
+    txt_file += ".txt";
+    // init source info
+    string str;
+    ifstream ifs;
+    double cpuidle, gpuidle;
+    ifs.open(txt_file, ios::in);
+    if (!ifs.is_open())
+    {
+        cout << "open file error" << std::endl;
+    }
+    // 一直读入
+
+    while (getline(ifs, str))
+    {
+        int i = 0;
+        while (str[i] != ' ')
+        {
+            i++;
+        }
+        cpuidle = std::stod(str.substr(0, i));
+        gpuidle = std::stod(str.substr(i + 1, str.length() - i - 1));
+    }
+    ifs.close();
+    double cpucost = table1.CPUCost;
+    double gpucost = table1.GPUCost;
+    string data = std::to_string(cpuidle - cpucost) + " " + std::to_string(gpuidle - gpucost);
+    write_txt(txt_file, data);
+
+    // 记录已执行
+    string txt_file2 = "/home/nics/my_hub/judge/";
+    txt_file2 += std::to_string(table1.ModuleID);
+    txt_file2 += "-";
+    txt_file2 += std::to_string(table1.PriorityID);
+    txt_file2 += ".txt";
+    string data2 = "1";
+    write_txt(txt_file2, data2);
+}
+
+bool GetRunningInfo(int Module, int Priority, machineID mID, double cpu, double gpu)
+{
+    // get mID info
+    string txt_file = "/home/nics/my_hub/freq/";
+    txt_file += std::to_string(Module);
+    txt_file += "/";
+    txt_file += std::to_string(Priority);
+    txt_file += "-";
+    txt_file += std::to_string(mID.ID4);
+    txt_file += ".txt";
+    // init source info
+    string str;
+    ifstream ifs;
+    int freq;
+    ifs.open(txt_file, ios::in);
+    if (!ifs.is_open())
+    {
+        std::cout << "open file error" << std::endl;
+        return false;
+    }
+    // 一直读入
+
+    while (getline(ifs, str))
+    {
+        freq = std::stoi(str);
+    }
+    ifs.close();
+    if (freq > 0)
+    {
+        write_txt(txt_file, std::to_string(freq - 1));
+        return true;
+    }
+    else if (freq == 0)
+    {
+        // release source
+        init_source(mID, cpu, gpu);
+        write_txt(txt_file, std::to_string(freq - 1));
+        return false;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+judge_table read_from_string(string str, int ID1, int ID2, int ID3, int ID4)
+{
+    judge_table table;
+    if (str.length() != 13)
+    {
+        cout << "error" << endl;
+        table.ModuleID = -1;
+        table.PriorityID = -1;
+        table.Latency = -1;
+        table.CPUCost = -1;
+        table.GPUCost = -1;
+    }
+    else
+    {
+        table.ModuleID = std::stoi(str.substr(0, 2));
+        table.PriorityID = std::stoi(str.substr(2, 2));
+        table.Latency = (double)(std::stoi(str.substr(4, 3)) / 1000.0);
+        table.CPUCost = (double)(std::stoi(str.substr(7, 3)) / 1000.0);
+        table.GPUCost = (double)(std::stoi(str.substr(10, 3)) / 1000.0);
+        table.MachineID.ID1 = ID1;
+        table.MachineID.ID2 = ID2;
+        table.MachineID.ID3 = ID3;
+        table.MachineID.ID4 = ID4;
+        // init_source(table.MachineID, table.ModuleID, table.PriorityID);
+    }
+    return table;
+}
+
+double ComputeHardwareFreq(judge_table table)
+{
+    bool run = table.Running;
+
+    if (run)
+    {
+        return (1 / (double)table.Latency);
+    }
+    else
+    {
+        source_table source = read_source_from_txt(table.MachineID);
+        if (table.CPUCost < source.CPUIdle && table.GPUCost < source.GPUIdle)
+        {
+            double freq = (1 / (double)table.Latency);
+
+            return freq;
+        }
+        else
+        {
+            return 0;
+        }
+    }
 }
 
 int string_to_int(std::string s)
@@ -75,6 +315,30 @@ int string_to_int(std::string s)
         return 0;
     }
     int n = 0;
+
+    for (int i = 0; i < s.length(); i++)
+    {
+        n = n * 10 + s[i] - '0';
+    }
+    return n;
+}
+
+long int string_to_long(std::string s)
+{
+    // judege the string is int or not
+    if (s.empty())
+    {
+        return 0;
+    }
+    if (s[0] == 'U')
+    {
+        return 0;
+    }
+    if (s[0] == 'e')
+    {
+        return 0;
+    }
+    long int n = 0;
 
     for (int i = 0; i < s.length(); i++)
     {
@@ -323,14 +587,14 @@ namespace eprosima
                 {
                     GUID_t temp_id = entry->remote_guid;
                     std::string temp_topic_key = temp_id.instanceId;
-                    int temp_topic_key_int = string_to_int(temp_topic_key);
-                    // if (temp_topic_key_int > 20)
+                    int temp_topic_key_size = string_to_int(temp_topic_key);
+                    // if (temp_topic_key_size > 20)
                     // {
-                    //     if (temp_topic_key_int > 1000)
+                    //     if (temp_topic_key_size > 1000)
                     //     {
                     //         entry->enabled = false;
                     //         // entry->reset();
-                    //         std::cout << "now_topic_key_int: " << temp_topic_key_int << std::endl;
+                    //         std::cout << "now_topic_key_int: " << temp_topic_key_size << std::endl;
                     //     }
                     // }
                     if (entry->enabled)
@@ -395,60 +659,201 @@ namespace eprosima
                 LocatorSelector locator_selector_temp2(1);
                 int write_flag = 0;
                 int write_int = 0;
+                int calculate_flag = 0;
+                int count = 0;
+                vector<judge_table> tables[100];
+                vector<machineID> mIDs[100][100];
+                vector<judge_table> tablesrunning;
+                int min = 999;
+                int max = -99;
+                int freq_demand = 5 * 46;
                 if (locator_size > 0)
                 {
                     for (LocatorSelectorEntry *entry : locator_selector_temp.entries_)
                     {
                         GUID_t temp_id = entry->remote_guid;
                         std::string temp_topic_key = temp_id.instanceId;
-                        int temp_topic_key_int = string_to_int(temp_topic_key);
-                        if (temp_topic_key_int > 20)
+                        int temp_topic_key_size = temp_topic_key.length();
+                        if (temp_topic_key_size == 13)
                         {
-
-                            // if (temp_topic_key_int < 1000)
-                            // {
-                            std::cout << "temp_topic_key_int: " << temp_topic_key_int << std::endl;
-
-                            std::string txt_file = "/home/nicsrobot/Fast-DDS/test.txt";
-                            std::string now_index = read_txt(txt_file);
-                            int now_int = string_to_int(now_index);
-                            write_int = now_int;
-                            // now_int < 10, topic_key == 9499 will be send
                             write_flag = 1;
-                            if (now_int < 100)
+                            string ModuleID = temp_topic_key.substr(0, 2);
+                            int index = std::stoi(ModuleID);
+                            string PriorityID = temp_topic_key.substr(2, 2);
+                            int index2 = std::stoi(PriorityID);
+                            if (min > index)
                             {
-                                if (temp_topic_key_int < 1000)
-                                {
-                                    // write_flag = 1;
-                                    // entry->enabled = false;
-                                    // entry->transport_should_process = false;
-                                    // entry->reset();
-                                    locator_selector_temp2.add_entry_tmp(entry, 0);
-
-                                    std::cout << "now_int: " << now_int << std::endl;
-                                    std::cout << "now_topic_key_int: " << temp_topic_key_int << std::endl;
-                                }
+                                min = index;
                             }
-                            if (now_int >= 100)
+                            if (max < index)
                             {
-                                if (temp_topic_key_int > 1000)
-                                {
-                                    // write_flag = 1;
-                                    // entry->enabled = false;
-                                    // entry->transport_should_process = false;
-                                    // entry->reset();
-                                    locator_selector_temp2.add_entry_tmp(entry, 0);
-                                    std::cout << "now_int: " << now_int << std::endl;
-                                    std::cout << "now_topic_key_int: " << temp_topic_key_int << std::endl;
-                                }
+                                max = index;
                             }
-                            now_int++;
-                            std::string then_index = std::to_string(now_int);
-                            write_txt(txt_file, then_index);
+                            tables[index].push_back(read_from_string(temp_topic_key, entry->unicast[0].address[12], entry->unicast[0].address[13], entry->unicast[0].address[14], entry->unicast[0].address[15]));
+                            mIDs[index][index2].push_back(tables[index][tables[index].size() - 1].MachineID);
                         }
                     }
                 }
 
+                if (write_flag == 1)
+                {
+                    string count_str = read_txt("/home/nics/my_hub/count.txt");
+                    count = std::stoi(count_str);
+                    string calculate_flag_str = read_txt("/home/nics/my_hub/calculate.txt");
+                    calculate_flag = std::stoi(calculate_flag_str);
+                    struct timeval tv;
+                    gettimeofday(&tv, NULL);
+                    string time_tv = std::to_string(tv.tv_sec) + "." + std::to_string(tv.tv_usec);
+                    string time_str = "/home/nics/my_hub/time/" + count_str + ".txt";
+                    write_txt(time_str, time_tv);
+                    if (calculate_flag == 0)
+                    {
+                        // init the sub's info
+                        for (int i = min; i <= max; i++)
+                        {
+                            for (int j = 0; j < tables[i].size(); j++)
+                            {
+                                tables[i][j].Running = GetRunningInfo(tables[i][j].ModuleID, tables[i][j].PriorityID, tables[i][j].MachineID, tables[i][j].CPUCost, tables[i][j].GPUCost);
+                                if (tables[i][j].Running == 1)
+                                {
+                                    tablesrunning.push_back(tables[i][j]);
+                                    break;
+                                }
+                            }
+                        }
+                        count++;
+                        if (count == freq_demand)
+                        {
+                            count = 0;
+                            calculate_flag = 1;
+                            write_txt("/home/nics/my_hub/calculate.txt", "1");
+                        }
+                        write_txt("/home/nics/my_hub/count.txt", std::to_string(count));
+                    }
+
+                    // calculate
+                    else
+                    {
+                        // init the sub's info
+                        for (int i = min; i <= max; i++)
+                        {
+                            for (int j = 0; j < tables[i].size(); j++)
+                            {
+                                tables[i][j].Running = GetRunningInfo(tables[i][j].ModuleID, tables[i][j].PriorityID, tables[i][j].MachineID, tables[i][j].CPUCost, tables[i][j].GPUCost);
+                            }
+                            // sort
+                            sort(tables[i].begin(), tables[i].end(), compare);
+                        }
+
+                        for (int i = min; i <= max; i++)
+                        {
+
+                            if (tables[i].empty() != 1)
+                            {
+                                std::cout << "The table is not empty " << tables[i].empty() << endl;
+                                // The length of the table
+                                std::cout << "The length of the table is " << tables[i].size() << endl;
+                                int execp = tables[i].size();
+                                double temp_freq;
+                                for (int j = 0; j < execp; j++)
+                                {
+                                    vector<double> freqs_double;
+                                    vector<int> freqs;
+                                    double max_freq = 0.0;
+                                    int pID = tables[i][j].PriorityID;
+                                    int pCount = mIDs[i][pID].size();
+                                    int temp_j = j;
+                                    for (int k = 0; k < pCount; k++)
+                                    {
+                                        // 对于一个算法而言，它可以有多个机器来运行。
+                                        // 需要计算该算法下的所有机器的帧率，如果满足需求，则运行
+
+                                        if (max_freq < freq_demand)
+                                        {
+                                            temp_freq = ComputeHardwareFreq(tables[i][j + k]) * 46;
+                                            // 对于一个算法而言，它可以有多个机器来运行。
+                                            // 需要计算该算法下的所有机器的帧率，如果满足需求，则运行
+                                            if (tables[i][j + k].Running == false && temp_freq > 0.01)
+                                            {
+                                                // 需要消耗掉特定的cpu、GPU资源
+
+                                                // 将该节点记为已经执行
+                                                tables[i][j + k].Running = true;
+                                            }
+
+                                            else if (tables[i][j + k].Running == true)
+                                            {
+                                                // 认为这个节点需要加入到执行队列中
+                                                // tablesrunning.push_back(tables[i][j + k]);
+                                                cout << (1) << endl;
+                                            }
+                                            max_freq += temp_freq;
+                                            freqs_double.push_back(temp_freq);
+                                        }
+
+                                        if (max_freq > freq_demand)
+                                        {
+                                            // 认为这个节点需要加入到执行队列中
+                                            for (int l = 0; l <= k; l++)
+                                            {
+                                                cout << (1);
+                                                modify_source(tables[i][j + l]);
+                                                tablesrunning.push_back(tables[i][j + l]);
+                                            }
+                                            j = j + pCount - 1;
+                                            break;
+                                        }
+                                        if (k == pCount - 1)
+                                        {
+                                            j = j + pCount - 1;
+                                        }
+                                    }
+                                    if (max_freq > freq_demand)
+                                    {
+                                        for (int l = 0; l < freqs_double.size(); l++)
+                                        {
+                                            double sum = max_freq;
+                                            int temp_freq = (int)(round(freqs_double[l] * freq_demand / sum));
+                                            int temp_ModulID = tables[i][temp_j + l].ModuleID;
+                                            int temp_PriorityID = tables[i][temp_j + l].PriorityID;
+                                            machineID temp_machineID = tables[i][temp_j + l].MachineID;
+                                            string freq_str = "/home/nics/my_hub/freq/" + to_string(temp_ModulID) + "/" + to_string(temp_PriorityID) + "-" + to_string(temp_machineID.ID4) + ".txt";
+                                            write_txt(freq_str, to_string(temp_freq));
+                                            freqs.push_back((int)(round(freqs_double[l] * freq_demand / sum)));
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        calculate_flag = 0;
+                        write_txt("/home/nics/my_hub/calculate.txt", "0");
+                    }
+                }
+
+                if (write_flag == 1)
+                {
+                    for (LocatorSelectorEntry *entry : locator_selector_temp.entries_)
+                    {
+                        GUID_t temp_id = entry->remote_guid;
+                        std::string temp_topic_key = temp_id.instanceId;
+                        int ModuleID = std::stoi(temp_topic_key.substr(0, 2));
+                        int PriorityID = std::stoi(temp_topic_key.substr(2, 2));
+                        // auto ID4 = entry->unicast[0]->address[15];
+                        auto IP = entry->unicast;
+                        int ID4 = IP[0].address[15];
+                        for (int i = 0; i < tablesrunning.size(); i++)
+                        {
+                            if (ModuleID == tablesrunning[i].ModuleID && PriorityID == tablesrunning[i].PriorityID && ID4 == tablesrunning[i].MachineID.ID4)
+                            {
+                                locator_selector_temp2.add_entry_tmp(entry, 0);
+                            }
+                        }
+                    }
+                }
+
+                // locator_selector_temp2.add_entry_tmp(entry, 0);
                 locator_selector_temp2.fresh_selections();
 
                 // 此处有golbal信息，可以在此添加筛选条件

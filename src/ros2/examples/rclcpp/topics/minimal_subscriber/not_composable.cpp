@@ -42,7 +42,7 @@ auto user_create_subscription(
     CallbackT &&callback,
     std::string topic_key)
 {
-  std::string filename = "/home/nicsrobot/ros2_foxy_debug/src/ros2/examples/rclcpp/topics/minimal_subscriber/";
+  std::string filename = "/home/nics/ros2_foxy_debug/src/ros2/examples/rclcpp/topics/minimal_subscriber/";
   std::string nodename = node->get_name();
   filename += nodename;
   filename += topic_name;

@@ -33,15 +33,19 @@ void write_txt(std::string txt_file, std::string data)
 
 int main(int argc, char *argv[])
 {
+  // std::string txt_file2 = "/home/nics/Fast-DDS/test2.txt";
+  // write_txt(txt_file2, "1");
   rclcpp::init(argc, argv);
   auto node = rclcpp::Node::make_shared("minimal_publisher");
   auto publisher = node->create_publisher<std_msgs::msg::String>("topic", 1);
   std_msgs::msg::String message;
   auto publish_count = 0;
   rclcpp::WallRate loop_rate(500ms);
-  std::string txt_file = "/home/nicsrobot/Fast-DDS/test.txt";
+  std::string txt_file = "/home/nics/Fast-DDS/test.txt";
   std::string now_index = "0";
+
   write_txt(txt_file, now_index);
+
   while (rclcpp::ok())
   {
     message.data = "Hello, world! " + std::to_string(publish_count++);
